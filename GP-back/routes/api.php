@@ -28,6 +28,25 @@ Route::post('/login', function (Request $request) {
     ]);
 });
 
+Route::post('/register', function (Request $request) {
+    $request->validate([
+        'name' => 'required|string|max:255|min:3',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:6',
+    ]);
+
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+    ]);
+
+    return response()->json([
+        'message' => 'Usuario registrado correctamente. Ahora puedes iniciar sesión.',
+    ], 201);
+});
+
+
 Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
     $request->user()->tokens()->delete();
     return response()->json(['message' => 'Sesión cerrada con éxito']);
