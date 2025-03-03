@@ -56,6 +56,48 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/test', function () {
-    return response()->json(['message' => 'Conexión exitosa con Laravel 🚀']);
+
+Route::middleware('auth:sanctum')->get('/profile', function (Request $request) {
+    return response()->json($request->user());
+});
+
+Route::middleware('auth:sanctum')->post('/profile/update', function (Request $request) {
+    $request->validate([
+        'name' => 'required|string|min:3',
+        'email' => 'required|email|unique:users,email,' . $request->user()->id,
+        'password' => 'nullable|string|min:6',
+        'profile_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+    ]);
+
+    $user = $request->user();
+    $user->name = $request->name;
+    $user->email = $request->email;
+
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
+    }
+
+    if ($request->hasFile('profile_image')) {
+        // Asegurar que la carpeta de almacenamiento exista
+        Storage::makeDirectory('public/profiles');
+    
+        $image = $request->file('profile_image');
+        $imageName = time() . '.' . $image->getClientOriginalExtension();
+    
+        // ✅ Guardar en `storage/app/public/profiles/`
+        $image->move(storage_path('app/public/profiles/'), $imageName);
+    
+        // ✅ Confirmar en logs la ruta correcta
+        \Log::info('Imagen guardada realmente en:', ['ruta' => storage_path("app/public/profiles/{$imageName}")]);
+    
+        $user->profile_image = $imageName;
+        $user->save();
+    }
+    
+    
+    
+
+    $user->save();
+
+    return response()->json(['message' => 'Perfil actualizado correctamente', 'user' => $user]);
 });
