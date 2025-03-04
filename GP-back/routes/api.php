@@ -101,3 +101,18 @@ Route::middleware('auth:sanctum')->post('/profile/update', function (Request $re
 
     return response()->json(['message' => 'Perfil actualizado correctamente', 'user' => $user]);
 });
+
+Route::middleware('auth:sanctum')->delete('/profile/delete-image', function (Request $request) {
+    $user = $request->user();
+
+    if ($user->profile_image) {
+        Storage::delete('public/profiles/' . $user->profile_image); // Eliminar del almacenamiento
+        $user->profile_image = null; // Eliminar de la base de datos
+        $user->save();
+        
+        return response()->json(['message' => 'Imagen eliminada correctamente']);
+    }
+
+    return response()->json(['message' => 'No hay imagen para eliminar'], 400);
+});
+
