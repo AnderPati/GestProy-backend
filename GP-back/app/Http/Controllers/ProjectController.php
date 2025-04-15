@@ -36,9 +36,11 @@ class ProjectController extends Controller {
     // Obtener un solo proyecto
     public function show($id) {
         $project = Project::find($id);
-        if (!$project) {
-            return response()->json(['message' => 'Proyecto no encontrado'], 404);
+
+        if (!$project || $project->user_id !== auth()->id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
         }
+
         return response()->json($project);
     }
 

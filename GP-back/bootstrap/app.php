@@ -15,5 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        \Log::info('DB error captured from withExceptions');
+        $exceptions->render(function (PDOException | \Illuminate\Database\QueryException $e, $request) {
+            return response()->json([
+                'message' => 'Hubo un error inesperado. Inténtalo más tarde o contacta con soporte técnico para saber más.'
+            ], 500);
+        });
     })->create();
