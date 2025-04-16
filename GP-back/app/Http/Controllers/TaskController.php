@@ -26,7 +26,9 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|in:pendiente,en progreso,completado',
             'due_date' => 'nullable|date',
-            'tags' => 'nullable|string'
+            'tags' => 'nullable|string',
+            'priority' => 'required|in:baja,media,alta',
+            'archived' => 'boolean'
         ]);
         $task = $project->tasks()->create([
             'title' => $request->title,
@@ -34,6 +36,8 @@ class TaskController extends Controller
             'status' => $request->status,
             'due_date' => $request->due_date,
             'tags' => $request->tags,
+            'priority' => $request->priority,
+            'archived' => $request->archived
         ]);
 
         return response()->json(['message' => 'Tarea creada con éxito', 'task' => $task]);

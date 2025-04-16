@@ -19,7 +19,9 @@ return new class extends Migration
             $table->enum('status', ['pendiente', 'en progreso', 'completado'])->default('pendiente');
             $table->date('due_date')->nullable();
             $table->string('tags')->nullable();
+            $table->enum('priority', ['baja', 'media', 'alta'])->default('media');
             $table->integer('position')->default(0);
+            $table->boolean('archived')->default(false);
             $table->timestamps();
         });
     }
