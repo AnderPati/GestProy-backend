@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\FolderController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -24,5 +25,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{project}/files', [ProjectFileController::class, 'index']);
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
     Route::get('/files/{file}/download', [ProjectFileController::class, 'download']);
+    Route::put('/files/{file}', [ProjectFileController::class, 'update']);
     Route::delete('/files/{file}', [ProjectFileController::class, 'destroy']);
+    Route::get('/folders/{folder}/download', [ProjectFileController::class, 'downloadFolder']);
+
+    Route::get('/projects/{project}/folders', [FolderController::class, 'index']);
+    Route::post('/projects/{project}/folders', [FolderController::class, 'store']);
+    Route::put('/projects/{project}/folders/{folder}', [FolderController::class, 'update']);
+    Route::delete('/projects/{project}/folders/{folder}', [FolderController::class, 'destroy']);    
 });

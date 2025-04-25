@@ -8,6 +8,7 @@ class ProjectFile extends Model
 {
     protected $fillable = [
         'project_id',
+        'folder_id',
         'original_name',
         'stored_name',
         'mime_type',
@@ -17,5 +18,10 @@ class ProjectFile extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function folder()
+    {
+        return $this->belongsTo(Folder::class);
     }
 }
