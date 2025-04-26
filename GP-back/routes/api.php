@@ -17,6 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::post('/profile/update', [ProfileController::class, 'update']);
     Route::delete('/profile/delete-image', [ProfileController::class, 'deleteImage']);
+    Route::get('/profile/storage-usage', [ProfileController::class, 'storageUsage']);
 
     Route::apiResource('projects', ProjectController::class);
 

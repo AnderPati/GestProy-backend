@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Project;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller {
     // Obtener todos los proyectos
@@ -63,8 +64,25 @@ class ProjectController extends Controller {
             return response()->json(['message' => 'Proyecto no encontrado'], 404);
         }
 
-        $project->delete();
-
-        return response()->json(['message' => 'Proyecto eliminado con éxito']);
+        try {
+            // Antes de eliminar el proyecto, eliminamos los archivos asociados
+            $folderPath = "projects/{$project->id}";
+            
+            if (Storage::exists($folderPath)) {
+                Storage::deleteDirectory($folderPath);
+            }
+    
+            
+            $project->delete();
+    
+            return response()->json(['message' => 'Proyecto eliminado']);
+        } catch (\Exception $e) {
+            \Log::error('Error al eliminar proyecto', ['error' => $e->getMessage()]);
+            return response()->json([
+                'message' => 'No se pudo eliminar el proyecto',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    
     }
 }

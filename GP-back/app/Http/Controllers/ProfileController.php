@@ -60,5 +60,23 @@ class ProfileController extends Controller
         }
         return response()->json(['success' => false, 'message' => 'No hay imagen para eliminar'], 400);
     }
+
+    public function storageUsage()
+    {
+        $user = auth()->user();
+
+        // Obtener todos los IDs de proyectos del usuario
+        $projectIds = $user->projects()->pluck('id');
+
+        // Sumar el tamaño total de todos los archivos de esos proyectos
+        $usedBytes = \App\Models\ProjectFile::whereIn('project_id', $projectIds)->sum('size');
+
+        // Devolver información
+        return response()->json([
+            'storage_limit' => $user->storage_limit, // en bytes
+            'used' => $usedBytes, // en bytes
+            'free' => max(0, $user->storage_limit - $usedBytes), // para asegurarnos que no dé negativo
+        ]);
+    }
 }
 

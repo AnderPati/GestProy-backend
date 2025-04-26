@@ -38,6 +38,20 @@ class ProjectFileController extends Controller
         ]);
 
         try {
+            $user = auth()->user();
+
+            // Calcular el espacio usado actual por este usuario
+            $usedStorage = ProjectFile::whereHas('project', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->sum('size');
+
+            $incomingFileSize = $request->file('file')->getSize();
+            $newTotal = $usedStorage + $incomingFileSize;
+    
+            if ($newTotal > $user->storage_limit) {
+                return response()->json(['message' => 'Has excedido tu límite de almacenamiento.'], 400);
+            }
+
             $file = $request->file('file');
             $folderId = $request->input('folder_id');
 
@@ -156,7 +170,7 @@ class ProjectFileController extends Controller
         }
 
         $request->validate([
-            'folder_id' => 'nullable|exists:folders,id' // 🔵 Permite folder_id null o válido
+            'folder_id' => 'nullable|exists:folders,id' // ermite folder_id null o válido
         ]);
 
         $oldFolderPath = $file->folder_id ? "projects/{$project->id}/files/{$file->folder->name}" : "projects/{$project->id}/files";
