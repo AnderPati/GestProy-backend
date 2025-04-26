@@ -54,7 +54,7 @@ class ProjectFileController extends Controller
             $shortenedOriginal = substr($originalName, -150);
             $storedName = uniqid() . '_' . $shortenedOriginal;
 
-            $storagePath = "public/projects/{$projectId}/files" . $folderPath;
+            $storagePath = "projects/{$projectId}/files" . $folderPath;
             $file->storeAs($storagePath, $storedName);
 
             $projectFile = ProjectFile::create([
@@ -86,7 +86,7 @@ class ProjectFileController extends Controller
         }
 
         $folderPath = $file->folder ? "/{$file->folder->name}" : '';
-        $path = "public/projects/{$project->id}/files{$folderPath}/{$file->stored_name}";
+        $path = "projects/{$project->id}/files{$folderPath}/{$file->stored_name}";
 
         if (!Storage::exists($path)) {
             return response()->json(['message' => 'Archivo no encontrado'], 404);
@@ -103,17 +103,27 @@ class ProjectFileController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        $folderPath = "projects/{$project->id}/files/{$folder->name}";
-        $storagePath = storage_path("app/public/{$folderPath}");
+        $folderName = $folder->name;
+
+        // Normalizamos espacios o caracteres especiales para evitar fallos
+        $folderNameSanitized = str_replace([' ', '%20'], '_', $folderName);
+
+        $folderPath = "projects/{$project->id}/files/{$folderNameSanitized}";
+        $storagePath = storage_path("app/private/{$folderPath}");
 
         if (!file_exists($storagePath)) {
+            \Log::error('No se encontró carpeta para descargar', ['ruta' => $storagePath]);
             return response()->json(['message' => 'Carpeta no encontrada.'], 404);
         }
 
-        $zipPath = storage_path("app/temp/{$folder->name}.zip");
-        if (!file_exists(storage_path("app/temp"))) {
-            mkdir(storage_path("app/temp"), 0755, true);
+        // Asegurarse que existe la carpeta temporal
+        $tempDir = storage_path("app/temp");
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0755, true);
         }
+
+        $zipFileName = $folderNameSanitized . '.zip';
+        $zipPath = $tempDir . '/' . $zipFileName;
 
         $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
@@ -152,8 +162,8 @@ class ProjectFileController extends Controller
         $oldFolderPath = $file->folder_id ? "projects/{$project->id}/files/{$file->folder->name}" : "projects/{$project->id}/files";
         $newFolderPath = $request->folder_id ? "projects/{$project->id}/files/" . Folder::find($request->folder_id)->name : "projects/{$project->id}/files";
 
-        $oldPath = "public/{$oldFolderPath}/{$file->stored_name}";
-        $newPath = "public/{$newFolderPath}/{$file->stored_name}";
+        $oldPath = "{$oldFolderPath}/{$file->stored_name}";
+        $newPath = "{$newFolderPath}/{$file->stored_name}";
 
         if ($oldPath !== $newPath && \Storage::exists($oldPath)) {
             \Storage::move($oldPath, $newPath);
@@ -175,7 +185,7 @@ class ProjectFileController extends Controller
         }
 
         $folderPath = $file->folder ? "/{$file->folder->name}" : '';
-        Storage::delete("public/projects/{$project->id}/files{$folderPath}/{$file->stored_name}");
+        Storage::delete("projects/{$project->id}/files{$folderPath}/{$file->stored_name}");
         $file->delete();
 
         return response()->json(['message' => 'Archivo eliminado']);
