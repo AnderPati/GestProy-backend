@@ -149,6 +149,16 @@ class ProjectFileController extends Controller
             'folder_id' => 'nullable|exists:folders,id' // 🔵 Permite folder_id null o válido
         ]);
 
+        $oldFolderPath = $file->folder_id ? "projects/{$project->id}/files/{$file->folder->name}" : "projects/{$project->id}/files";
+        $newFolderPath = $request->folder_id ? "projects/{$project->id}/files/" . Folder::find($request->folder_id)->name : "projects/{$project->id}/files";
+
+        $oldPath = "public/{$oldFolderPath}/{$file->stored_name}";
+        $newPath = "public/{$newFolderPath}/{$file->stored_name}";
+
+        if ($oldPath !== $newPath && \Storage::exists($oldPath)) {
+            \Storage::move($oldPath, $newPath);
+        }
+
         $file->folder_id = $request->folder_id; // Puede ser null si el usuario así lo quiere
         $file->save();
 
