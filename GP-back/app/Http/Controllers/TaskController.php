@@ -54,6 +54,63 @@ class TaskController extends Controller
         return response()->json($task);
     }
 
+    public function allUserTasks(Request $request)
+    {
+        $user = auth()->user();
+
+        $query = Task::whereHas('project', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->with('project:id,name');
+
+        // Filtro por estado
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Filtro por fecha límite (antes, después, igual)
+        if ($request->filled('due_before')) {
+            $query->whereDate('due_date', '<=', $request->input('due_before'));
+        }
+        if ($request->filled('due_after')) {
+            $query->whereDate('due_date', '>=', $request->input('due_after'));
+        }
+        if ($request->filled('due_on')) {
+            $query->whereDate('due_date', '=', $request->input('due_on'));
+        }
+
+        // Filtro por proyecto (por nombre del proyecto)
+        if ($request->filled('project_name')) {
+            $query->whereHas('project', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('project_name') . '%');
+            });
+        }
+
+        // Filtro por búsqueda general (en título o descripción)
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->input('search') . '%')
+                ->orWhere('description', 'like', '%' . $request->input('search') . '%');
+            });
+        }
+
+        // Ordenación (opcional)
+        if ($request->filled('sort_by')) {
+            $sortBy = $request->input('sort_by');
+            $direction = $request->input('sort_direction', 'asc');
+
+            if (in_array($sortBy, ['due_date', 'priority', 'status'])) {
+                $query->orderBy($sortBy, $direction);
+            }
+        } else {
+            // Default ordenación
+            $query->orderBy('due_date', 'asc');
+        }
+
+        $tasks = $query->get();
+
+        return response()->json($tasks);
+    }
+
     public function update(Request $request, $id)
     {
         $task = Task::find($id);

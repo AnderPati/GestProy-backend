@@ -22,6 +22,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('projects', ProjectController::class);
 
     Route::apiResource('projects.tasks', TaskController::class)->shallow();
+    Route::get('/tasks', [TaskController::class, 'allUserTasks']);
+
 
     Route::get('/projects/{project}/files', [ProjectFileController::class, 'index']);
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
