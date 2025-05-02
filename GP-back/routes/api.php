@@ -21,8 +21,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('projects', ProjectController::class);
 
+    Route::get('/tasks/upcoming', [TaskController::class, 'upcoming']);
     Route::apiResource('projects.tasks', TaskController::class)->shallow();
     Route::get('/tasks', [TaskController::class, 'allUserTasks']);
+
 
 
     Route::get('/projects/{project}/files', [ProjectFileController::class, 'index']);

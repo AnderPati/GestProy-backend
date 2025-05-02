@@ -111,6 +111,25 @@ class TaskController extends Controller
         return response()->json($tasks);
     }
 
+    public function upcoming()
+    {
+        $user = auth()->user();
+        $today = now();
+        $inThreeDays = now()->addDays(3);
+
+        $tasks = Task::with('project:id,name')
+        ->whereHas('project', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })
+            ->whereDate('due_date', '>=', $today)
+            ->whereDate('due_date', '<=', $inThreeDays)
+            ->where('status', '!=', 'completado')
+            ->orderBy('due_date', 'asc')
+            ->get();
+
+        return response()->json($tasks);
+    }
+
     public function update(Request $request, $id)
     {
         $task = Task::find($id);
