@@ -7,6 +7,11 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Google_Client;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+use GuzzleHttp\Client as GuzzleClient;
 
 class AuthController extends Controller
 {
@@ -29,6 +34,45 @@ class AuthController extends Controller
             'user' => new UserResource($user),
         ]);
     }
+
+    public function loginWithGoogle(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        $client = new Google_Client(['client_id' => config('services.google.client_id')]);
+        $client->setHttpClient(new GuzzleClient(['verify' => false]));
+
+        $payload = $client->verifyIdToken($request->token);
+
+        if (!$payload) {
+            return response()->json(['message' => 'Token de Google inválido'], 401);
+        }
+
+        $user = User::firstOrCreate(
+            ['email' => $payload['email']],
+            [
+                'name' => $payload['name'],
+                'password' => bcrypt(Str::random(32)),
+                'auth_provider' => 'google'
+            ]
+        );
+
+        if (is_null($user->auth_provider)) {
+            $user->update(['auth_provider' => 'google']);
+        }
+
+        // ✅ Generar token para usar como Bearer
+        $token = $user->createToken('google_token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+            'user' => $user,
+        ]);
+    }
+
 
     public function register(RegisterRequest $request)
     {

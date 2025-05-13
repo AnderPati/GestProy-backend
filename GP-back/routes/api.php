@@ -8,6 +8,7 @@ use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\FolderController;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login/google', [AuthController::class, 'loginWithGoogle']);
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
